@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
+import ProductCard from '../components/ProductCard';
+import Pagination from '../components/Pagination';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -96,47 +98,24 @@ const Home = () => {
       </div>
 
       {/* Product Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+      <div className="product-grid">
         {currentItems.map(product => (
-          <div key={product.id} style={{ border: '1px solid #ccc', padding: '10px', position: 'relative' }}>
-            <span
-              onClick={() => toggleWishlist(product.id)}
-              title={wishlist.includes(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
-              style={{
-                position: 'absolute',
-                top: '10px',
-                right: '10px',
-                cursor: 'pointer',
-                fontSize: '20px',
-                transition: 'transform 0.2s ease',
-                color: wishlist.includes(product.id) ? 'red' : '#ccc'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.3)'}
-              onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              ❤️
-            </span>
-            <h4>{product.title}</h4>
-            <img src={product.image} alt={product.title} style={{ width: '100px', height: '100px', objectFit: 'contain' }} />
-            <p><strong>${product.price}</strong></p>
-            <p>⭐ {product.rating?.rate} / 5</p>
-            <button onClick={() => addToCart(product)}>Add to Cart</button>
-            <br />
-            <Link to={`/product/${product.id}`}>View Details</Link>
-          </div>
+          <ProductCard
+            key={product.id}
+            product={product}
+            onAddToCart={addToCart}
+            onToggleWishlist={toggleWishlist}
+            isWishlisted={wishlist.includes(product.id)}
+          />
         ))}
       </div>
 
       {/* Pagination */}
-      <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
-        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
-          Prev
-        </button>
-        <span>Page {currentPage} of {totalPages}</span>
-        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
-          Next
-        </button>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

@@ -1,6 +1,8 @@
 // src/pages/Wishlist.js
 import React, { useState, useEffect, useContext } from 'react';
 import { CartContext } from '../context/CartContext';
+import ProductCard from '../components/ProductCard';
+import { Link } from 'react-router-dom';
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -19,6 +21,7 @@ const Wishlist = () => {
   const removeFromWishlist = (id) => {
     const updated = wishlistItems.filter(item => item.id !== id);
     setWishlistItems(updated);
+
     const stored = JSON.parse(localStorage.getItem('wishlist')) || [];
     const newList = stored.filter(w => w !== id);
     localStorage.setItem('wishlist', JSON.stringify(newList));
@@ -27,24 +30,26 @@ const Wishlist = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h2>Your Wishlist ❤️</h2>
+
       {wishlistItems.length === 0 ? (
         <p>No items in wishlist.</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+        <div className="product-grid">
           {wishlistItems.map(item => (
-            <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px' }}>
-              <h4>{item.title}</h4>
-              <img src={item.image} alt={item.title} style={{ width: '100px', height: '100px', objectFit: 'contain' }} />
-              <p><strong>${item.price}</strong></p>
-              <p>⭐ {item.rating?.rate} / 5</p>
-              <button onClick={() => addToCart(item)}>Add to Cart</button>
-              <button onClick={() => removeFromWishlist(item.id)} style={{ marginLeft: '10px' }}>
-                Remove ❤️
-              </button>
-            </div>
+            <ProductCard
+              key={item.id}
+              product={item}
+              onAddToCart={addToCart}
+              onToggleWishlist={removeFromWishlist}
+              isWishlisted={true}
+            />
           ))}
         </div>
       )}
+
+      <Link to="/" style={{ display: 'inline-block', marginTop: '30px' }}>
+        ← Continue Shopping
+      </Link>
     </div>
   );
 };
