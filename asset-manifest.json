@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/ecom-test-appy/static/css/main.e6c13ad2.css",
+    "main.js": "/ecom-test-appy/static/js/main.4add80b4.js",
+    "index.html": "/ecom-test-appy/index.html",
+    "main.e6c13ad2.css.map": "/ecom-test-appy/static/css/main.e6c13ad2.css.map",
+    "main.4add80b4.js.map": "/ecom-test-appy/static/js/main.4add80b4.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.4add80b4.js"
+  ]
+}
