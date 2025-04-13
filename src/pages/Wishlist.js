@@ -1,11 +1,11 @@
-// src/pages/Wishlist.js
 import React, { useState, useEffect, useContext } from 'react';
+import { useLocation } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 import MasonryGrid from '../components/MasonryGrid';
-import { Link } from 'react-router-dom';
 
 const Wishlist = () => {
+  const location = useLocation();
   const [wishlistItems, setWishlistItems] = useState([]);
   const { addToCart } = useContext(CartContext);
 
@@ -21,7 +21,7 @@ const Wishlist = () => {
 
   useEffect(() => {
     fetchWishlistItems();
-  }, []);
+  }, [location]);
 
   const removeFromWishlist = (id) => {
     const updated = wishlistItems.filter(item => item.id !== id);
@@ -45,7 +45,9 @@ const Wishlist = () => {
         <p>No items in wishlist.</p>
       ) : (
         <>
-          <button onClick={clearWishlist} style={{ marginBottom: '20px' }}>Clear Wishlist 🗑️</button>
+          <button onClick={clearWishlist} style={{ marginBottom: '20px' }}>
+            Clear Wishlist 🗑️
+          </button>
           <MasonryGrid>
             {wishlistItems.map(item => (
               <ProductCard
@@ -60,9 +62,14 @@ const Wishlist = () => {
         </>
       )}
 
-      <Link to="/" style={{ display: 'inline-block', marginTop: '30px' }}>
+      <button
+        onClick={() => {
+          window.location.href = '/';
+        }}
+        style={{ display: 'inline-block', marginTop: '30px' }}
+      >
         ← Continue Shopping
-      </Link>
+      </button>
     </div>
   );
 };

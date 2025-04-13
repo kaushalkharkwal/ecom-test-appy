@@ -1,6 +1,11 @@
-// src/App.js
 import React, { useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  Navigate
+} from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
 import Cart from './pages/Cart';
@@ -13,7 +18,13 @@ import { CartProvider, CartContext } from './context/CartContext';
 
 const ProtectedRoute = ({ children }) => {
   const { cart } = useContext(CartContext);
-  return cart.length > 0 ? children : <Navigate to="/cart" replace />;
+
+  // ✅ If cart is empty, redirect to home
+  if (cart.length === 0) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 };
 
 const AnimatedRoutes = () => {
@@ -26,8 +37,26 @@ const AnimatedRoutes = () => {
         <Route path="/wishlist" element={<PageWrapper><Wishlist /></PageWrapper>} />
         <Route path="/product/:id" element={<PageWrapper><ProductDetail /></PageWrapper>} />
         <Route path="/cart" element={<PageWrapper><Cart /></PageWrapper>} />
-        <Route path="/checkout" element={<PageWrapper><ProtectedRoute><Checkout /></ProtectedRoute></PageWrapper>} />
-        <Route path="/thank-you" element={<PageWrapper><ProtectedRoute><ThankYou /></ProtectedRoute></PageWrapper>} />
+        <Route
+          path="/checkout"
+          element={
+            <PageWrapper>
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/thank-you"
+          element={
+            <PageWrapper>
+              <ProtectedRoute>
+                <ThankYou />
+              </ProtectedRoute>
+            </PageWrapper>
+          }
+        />
         <Route path="*" element={<PageWrapper><div>404 - Page Not Found</div></PageWrapper>} />
       </Routes>
     </AnimatePresence>
