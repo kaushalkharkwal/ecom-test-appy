@@ -13,7 +13,26 @@ export const CartProvider = ({ children }) => {
     const updatedCart = [...cart, product];
     setCart(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
+  
+    // Push to GTM dataLayer for GA4 tracking
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'add_to_cart',
+      ecommerce: {
+        currency: 'USD', // or your store's currency
+        value: product.price,
+        items: [
+          {
+            item_name: product.title,
+            item_id: product.id,
+            price: product.price,
+            quantity: 1
+          }
+        ]
+      }
+    });
   };
+  
 
   const removeFromCart = (id) => {
     const updatedCart = cart.filter(item => item.id !== id);
