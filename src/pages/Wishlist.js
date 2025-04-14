@@ -11,11 +11,34 @@ const Wishlist = () => {
 
   const fetchWishlistItems = () => {
     const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+
+    console.log('📥 Wishlist IDs from localStorage:', wishlist);
+
     fetch('https://fakestoreapi.com/products')
       .then(res => res.json())
       .then(data => {
         const filtered = data.filter(product => wishlist.includes(product.id));
         setWishlistItems(filtered);
+
+        const mappedItems = filtered.map(item => ({
+          item_id: item.id,
+          item_name: item.title,
+          price: item.price
+        }));
+
+        console.log('🛍 Wishlist items to send to GA4:', mappedItems);
+
+        setTimeout(() => {
+          console.log('🔥 Triggering view_wishlist event...');
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({
+            event: 'view_wishlist',
+            ecommerce: {
+              currency: 'USD',
+              items: mappedItems
+            }
+          });
+        }, 1500); // delay to allow GTM to initialize
       });
   };
 
@@ -30,11 +53,34 @@ const Wishlist = () => {
     const stored = JSON.parse(localStorage.getItem('wishlist')) || [];
     const newList = stored.filter(w => w !== id);
     localStorage.setItem('wishlist', JSON.stringify(newList));
+
+    const removedItem = wishlistItems.find(item => item.id === id);
+    if (removedItem) {
+      const itemData = {
+        item_id: removedItem.id,
+        item_name: removedItem.title,
+        price: removedItem.price
+      };
+
+      console.log('❌ remove_from_wishlist triggered for:', itemData);
+
+      setTimeout(() => {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: 'remove_from_wishlist',
+          ecommerce: {
+            currency: 'USD',
+            items: [itemData]
+          }
+        });
+      }, 500);
+    }
   };
 
   const clearWishlist = () => {
     localStorage.removeItem('wishlist');
     setWishlistItems([]);
+    console.log('🧹 Wishlist cleared');
   };
 
   return (

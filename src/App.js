@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -15,21 +15,36 @@ import ProductDetail from './pages/ProductDetail';
 import ThankYou from './pages/ThankYou';
 import Wishlist from './pages/Wishlist';
 import { CartProvider, CartContext } from './context/CartContext';
+import usePageTracking from './hooks/usePageTracking';
+
+// ✅ Set environment type once
+const GTMInitializer = () => {
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    const environmentType =
+      hostname === 'www.listuritems.com' ? 'production' : 'development';
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      environmentType
+    });
+
+    console.log(`✅ Pushed environmentType: ${environmentType}`);
+  }, []);
+
+  return null;
+};
 
 const ProtectedRoute = ({ children }) => {
   const { cart } = useContext(CartContext);
-
-  // ✅ If cart is empty, redirect to home
   if (cart.length === 0) {
     return <Navigate to="/" replace />;
   }
-
   return children;
 };
 
 const AnimatedRoutes = () => {
   const location = useLocation();
-
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -75,9 +90,12 @@ const PageWrapper = ({ children }) => (
 );
 
 const App = () => {
+  usePageTracking(); // track SPA page views
+
   return (
     <CartProvider>
       <Router>
+        <GTMInitializer /> {/* 🔁 Push environmentType before other events */}
         <Navbar />
         <AnimatedRoutes />
       </Router>
