@@ -1,63 +1,37 @@
-import React, { useContext } from 'react';
+// src/App.js
+import React from 'react';
 import {
   BrowserRouter as Router,
   Routes,
-  Route,
-  useLocation,
-  Navigate
+  Route
 } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar';
+import Home from './pages/Home';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
-import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import ThankYou from './pages/ThankYou';
 import Wishlist from './pages/Wishlist';
-import { CartProvider, CartContext } from './context/CartContext';
+import { CartProvider } from './context/CartContext';
 import usePageTracking from './hooks/usePageTracking';
-
-const ProtectedRoute = ({ children }) => {
-  const { cart } = useContext(CartContext);
-  return cart.length === 0 ? <Navigate to="/" replace /> : children;
-};
-
-const AnimatedRoutes = () => {
-  const location = useLocation();
+import PageTracker from './components/PageTracker'; // 👈 import
+const App = () => {
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
-        <Route path="/wishlist" element={<PageWrapper><Wishlist /></PageWrapper>} />
-        <Route path="/product/:id" element={<PageWrapper><ProductDetail /></PageWrapper>} />
-        <Route path="/cart" element={<PageWrapper><Cart /></PageWrapper>} />
-        <Route path="/checkout" element={<PageWrapper><ProtectedRoute><Checkout /></ProtectedRoute></PageWrapper>} />
-        <Route path="/thank-you" element={<PageWrapper><ProtectedRoute><ThankYou /></ProtectedRoute></PageWrapper>} />
-        <Route path="*" element={<PageWrapper><h2>404 - Page Not Found</h2></PageWrapper>} />
-      </Routes>
-    </AnimatePresence>
+    <CartProvider>
+      <Router>
+  <PageTracker /> {/* ✅ Now safe and inside <Router> */}
+  <Navbar />
+  <Routes>
+    <Route path="/" element={<Home />} />
+    <Route path="/product/:id" element={<ProductDetail />} />
+    <Route path="/cart" element={<Cart />} />
+    <Route path="/wishlist" element={<Wishlist />} />
+    <Route path="/checkout" element={<Checkout />} />
+    <Route path="/thankyou" element={<ThankYou />} />
+  </Routes>
+</Router>
+    </CartProvider>
   );
 };
-
-const PageWrapper = ({ children }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
-    transition={{ duration: 0.3 }}
-  >
-    {children}
-  </motion.div>
-);
-
-const App = () => (
-  <CartProvider>
-    <Router>
-      {usePageTracking()}
-      <Navbar />
-      <AnimatedRoutes />
-    </Router>
-  </CartProvider>
-);
 
 export default App;
