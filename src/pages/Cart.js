@@ -1,37 +1,41 @@
-// src/pages/Cart.js
-import React, { useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { CartContext } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 
 const Cart = () => {
   const { cart, removeFromCart } = useContext(CartContext);
-
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cart));
-  }, [cart]);
+  const handleRemove = (id) => {
+    const item = cart.find(i => i.id === id);
+    if (item) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'remove_from_cart',
+        ecommerce: {
+          currency: 'USD',
+          items: [{
+            item_id: item.id,
+            item_name: item.title,
+            price: item.price
+          }]
+        }
+      });
+    }
+    removeFromCart(id);
+  };
 
   return (
     <div style={{ padding: '20px' }}>
       <h2>Your Cart</h2>
-      {cart.length === 0 ? (
-        <p>Your cart is empty.</p>
-      ) : (
-        <>
-          {cart.map(item => (
-            <div key={item.id} style={{ margin: '10px 0' }}>
-              {item.title} - ${item.price}
-              <button onClick={() => removeFromCart(item.id)} style={{ marginLeft: '10px' }}>Remove</button>
-            </div>
-          ))}
-          <h3>Total: ${total.toFixed(2)}</h3>
-          <div>
-            <Link to="/checkout" style={{ marginRight: '20px' }}>Go to Checkout</Link>
-            <Link to="/">Continue Shopping</Link>
-          </div>
-        </>
-      )}
+      {cart.map(item => (
+        <div key={item.id} style={{ margin: '10px 0' }}>
+          {item.title} - ${item.price.toFixed(2)}
+          <button onClick={() => handleRemove(item.id)} style={{ marginLeft: '10px' }}>Remove</button>
+        </div>
+      ))}
+      <h3>Total: ${total.toFixed(2)}</h3>
+      <Link to="/checkout">Go to Checkout</Link>
     </div>
   );
 };

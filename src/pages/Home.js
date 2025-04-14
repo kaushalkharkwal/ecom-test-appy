@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
-import ProductCard from '../components/ProductCard';
-import MasonryGrid from '../components/MasonryGrid';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -17,7 +15,6 @@ const Home = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-
   const { addToCart } = useContext(CartContext);
 
   useEffect(() => {
@@ -26,42 +23,76 @@ const Home = () => {
       .then(data => {
         setProducts(data);
         setFilteredProducts(data);
+        fireViewItemList(data); // fire GA4 view_item_list
       });
   }, []);
 
+  const fireViewItemList = (items) => {
+    const mappedItems = items.slice(0, itemsPerPage).map(item => ({
+      item_id: item.id,
+      item_name: item.title,
+      price: item.price
+    }));
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'view_item_list',
+      ecommerce: {
+        currency: 'USD',
+        item_list_name: 'Home Page Products',
+        items: mappedItems
+      }
+    });
+  };
+
   useEffect(() => {
     let temp = [...products];
-
     if (category !== 'all') {
       temp = temp.filter(p => p.category === category);
     }
-
     if (search.trim()) {
       temp = temp.filter(p => p.title.toLowerCase().includes(search.toLowerCase()));
     }
-
     if (minRating > 0) {
       temp = temp.filter(p => p.rating?.rate >= minRating);
     }
-
     if (sortOrder === 'asc') {
       temp.sort((a, b) => a.price - b.price);
     } else if (sortOrder === 'desc') {
       temp.sort((a, b) => b.price - a.price);
     }
-
     setFilteredProducts(temp);
     setCurrentPage(1);
+    fireViewItemList(temp); // refire view_item_list after filtering
   }, [category, search, sortOrder, minRating, products]);
 
   useEffect(() => {
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
-  const toggleWishlist = (id) => {
-    setWishlist(prev =>
-      prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id]
-    );
+  const toggleWishlist = (id, title, price) => {
+    const isInWishlist = wishlist.includes(id);
+    const updated = isInWishlist
+      ? wishlist.filter(w => w !== id)
+      : [...wishlist, id];
+
+    setWishlist(updated);
+
+    if (!isInWishlist) {
+      // Fire GA4 add_to_wishlist
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'add_to_wishlist',
+        ecommerce: {
+          currency: 'USD',
+          items: [{
+            item_id: id,
+            item_name: title,
+            price: price
+          }]
+        }
+      });
+    }
   };
 
   const categories = ['all', ...new Set(products.map(p => p.category))];
@@ -73,51 +104,62 @@ const Home = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h2>All Products</h2>
-
-      {/* Filter Bar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
         <select value={category} onChange={e => setCategory(e.target.value)}>
           {categories.map(cat => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </select>
-
         <input
           type="text"
           placeholder="Search products..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-
         <select value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
           <option value="default">Sort by</option>
           <option value="asc">Price: Low to High</option>
           <option value="desc">Price: High to Low</option>
         </select>
-
         <select value={minRating} onChange={e => setMinRating(Number(e.target.value))}>
           <option value={0}>Rating: All</option>
           <option value={4}>4★ & up</option>
           <option value={3}>3★ & up</option>
         </select>
-
         <Link to="/wishlist" style={{ marginLeft: 'auto' }}>View Wishlist ❤️</Link>
       </div>
 
-      {/* Product Grid */}
-      <MasonryGrid>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
         {currentItems.map(product => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAddToCart={addToCart}
-            onToggleWishlist={toggleWishlist}
-            isWishlisted={wishlist.includes(product.id)}
-          />
+          <div key={product.id} style={{ border: '1px solid #ccc', padding: '10px', position: 'relative' }}>
+            <span
+              onClick={() => toggleWishlist(product.id, product.title, product.price)}
+              title={wishlist.includes(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                cursor: 'pointer',
+                fontSize: '20px',
+                transition: 'transform 0.2s ease',
+                color: wishlist.includes(product.id) ? 'red' : '#ccc'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.3)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              ❤️
+            </span>
+            <h4>{product.title}</h4>
+            <img src={product.image} alt={product.title} style={{ width: '100px', height: '100px', objectFit: 'contain' }} />
+            <p><strong>${product.price}</strong></p>
+            <p>⭐ {product.rating?.rate} / 5</p>
+            <button onClick={() => addToCart(product)}>Add to Cart</button>
+            <br />
+            <Link to={`/product/${product.id}`}>View Details</Link>
+          </div>
         ))}
-      </MasonryGrid>
+      </div>
 
-      {/* Pagination */}
       <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
         <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
           Prev
